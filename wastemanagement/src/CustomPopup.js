@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './CustomPopup.css';
 import LineGraph from './LineGraph';
+import GraphModal from './GraphModal'; // New component for LineGraph modal
 
 const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showData, setShowData] = useState(false);
   const [showDataDetails, setShowDataDetails] = useState(false);
-  const [showLineGraph, setShowLineGraph] = useState(false);
+  const [showGraphModal, setShowGraphModal] = useState(false); // State for LineGraph modal
 
   const images = nodeDetails ? [
     `${nodeDetails.node_id}_bin1_image.png`,
@@ -39,8 +40,8 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const toggleLineGraph = () => {
-    setShowLineGraph(!showLineGraph);
+  const toggleGraphModal = () => {
+    setShowGraphModal(!showGraphModal);
   };
 
   if (!nodeDetails) {
@@ -88,11 +89,17 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
         </div>
       </div>
 
-      <button onClick={toggleLineGraph}>
-        {showLineGraph ? 'Hide Line Graph' : 'Show Line Graph'}
+      {/* Button to toggle LineGraph modal */}
+      <button onClick={toggleGraphModal}>
+        Show Line Graph
       </button>
-      
-      {showLineGraph && <LineGraph nodeId={nodeDetails.node_id} />}
+
+      {/* LineGraph modal */}
+      {showGraphModal && (
+        <GraphModal onClose={toggleGraphModal}>
+          <LineGraph nodeId={nodeDetails.node_id} />
+        </GraphModal>
+      )}
     </div>
   );
 };
