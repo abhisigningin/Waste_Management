@@ -1,0 +1,23 @@
+{
+    "wastemanagment": {
+        "Timestamp":"timestamp with time zone",
+        "BinData": "TEXT",
+        "CS": "TEXT",
+        "LCT": "TEXT",
+        "Violations": "TEXT"
+    },
+    "waste": {
+        "Timestamp":"timestamp with time zone",
+        "BinData": "TEXT",
+        "CS": "TEXT",
+        "LCT": "TEXT",
+        "Violations": "TEXT"
+    },
+    "was": {
+        "Timestamp":"timestamp with time zone",
+        "BinData": "TEXT",
+        "CS": "TEXT",
+        "LCT": "TEXT",
+        "Violations": "TEXT"
+    }
+}

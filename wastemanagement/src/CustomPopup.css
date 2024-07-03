@@ -1,0 +1,35 @@
+/* Assuming this is in a CSS file imported into your component */
+
+
+  
+  .image-nav button:hover {
+    background: #6fe112; /* Hover background color */
+  }
+
+
+
+
+  .overlay-text {
+    position: absolute;
+    margin-top: -27px; /* Adjust as needed */
+    /* left: 100px; */
+    justify-content: center;
+    text-align: center;
+    color: rgb(24, 23, 23);
+    background-color: rgba(242, 238, 238, 0.961); /* Semi-transparent background */
+    /* padding: 5px 10px; */
+    /* border-radius: 3px; */
+    width: 193px;
+    font-size: 14px; /* Adjust font size as needed */
+  }
+
+
+  .graph-container {
+    margin-top: 20px;
+  }
+  
+  .graph-container select {
+    margin-right: 10px;
+    padding: 5px;
+  }
+  
