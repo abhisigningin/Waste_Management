@@ -1,4 +1,3 @@
-// LineGraph.js
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -38,8 +37,11 @@ const LineGraph = ({ nodeId }) => {
   }, [period, status]);
 
   return (
-    <div>
-      <div>
+    <div className="graph-modal">
+      <div className="graph">
+        <Line data={data} options={{ maintainAspectRatio: false }} />
+      </div>
+      <div className="controls" style={{ marginTop: '20px', textAlign: 'center' }}>
         <label>
           Status:
           <select value={status} onChange={e => setStatus(e.target.value)}>
@@ -47,7 +49,7 @@ const LineGraph = ({ nodeId }) => {
             <option value="Uncleaned">Uncleaned</option>
           </select>
         </label>
-        <label>
+        <label style={{ marginLeft: '10px' }}>
           Period:
           <select value={period} onChange={e => setPeriod(e.target.value)}>
             <option value="weekly">Weekly</option>
@@ -56,7 +58,6 @@ const LineGraph = ({ nodeId }) => {
           </select>
         </label>
       </div>
-      <Line data={data} />
     </div>
   );
 };

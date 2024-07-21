@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './CustomPopup.css';
-import LineGraph from './LineGraph';
-import GraphModal from './GraphModal'; // New component for LineGraph modal
 
-const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
+const CustomPopup = ({ nodeDetails, onBinClick, onClose, toggleGraphModal }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showData, setShowData] = useState(false);
-  const [showDataDetails, setShowDataDetails] = useState(false);
-  const [showGraphModal, setShowGraphModal] = useState(false); // State for LineGraph modal
 
   const images = nodeDetails ? [
     `${nodeDetails.node_id}_bin1_image.png`,
@@ -33,20 +28,8 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
   };
 
   useEffect(() => {
-    setShowData(true); // Trigger animation on component mount
-    const timer = setTimeout(() => {
-      setShowDataDetails(true); // Trigger detailed data animation
-    }, 500); // Adjust the delay as needed
-    return () => clearTimeout(timer);
+    // Trigger animation or other effects on component mount if needed
   }, []);
-
-  const toggleGraphModal = () => {
-    setShowGraphModal(!showGraphModal);
-  };
-
-  if (!nodeDetails) {
-    return null; // or return some placeholder content
-  }
 
   return (
     <div className="popup-content">
@@ -71,20 +54,20 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
       </div>
 
       {/* Right side - Data */}
-      <div className={`popup-data ${showData ? 'show' : ''}`}>
-        <div style={{ transitionDelay: '0.5s' }}>
+      <div className="popup-data">
+        <div>
           <strong>Node ID:</strong> {nodeDetails.node_id}
         </div>
-        <div style={{ transitionDelay: '1s' }}>
+        <div>
           <strong>Bin Data:</strong> {nodeDetails.bin_data}
         </div>
-        <div style={{ transitionDelay: '1.5s' }}>
+        <div>
           <strong>LCT:</strong> {nodeDetails.lct}
         </div>
-        <div style={{ transitionDelay: '2s' }}>
+        <div>
           <strong>CS:</strong> {nodeDetails.cs}
         </div>
-        <div style={{ transitionDelay: '2.5s' }}>
+        <div>
           <strong>Violations:</strong> {nodeDetails.violations && parseViolations(JSON.parse(nodeDetails.violations))}
         </div>
       </div>
@@ -93,13 +76,6 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose }) => {
       <button onClick={toggleGraphModal}>
         Show Line Graph
       </button>
-
-      {/* LineGraph modal */}
-      {showGraphModal && (
-        <GraphModal onClose={toggleGraphModal}>
-          <LineGraph nodeId={nodeDetails.node_id} />
-        </GraphModal>
-      )}
     </div>
   );
 };

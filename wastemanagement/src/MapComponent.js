@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import CustomPopup from './CustomPopup'; // Import the CustomPopup component
+import CustomPopup from './CustomPopup';
+import GraphModal from './GraphModal'; // Import the GraphModal component
+import LineGraph from './LineGraph';
 
 const MapComponent = () => {
   const [nodes, setNodes] = useState([]);
   const [nodeDetails, setNodeDetails] = useState({});
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [showGraphModal, setShowGraphModal] = useState(false); // State to control LineGraph modal
 
   const customIcon = new L.Icon({
     iconUrl: '/custom-icon.png',
@@ -56,6 +59,10 @@ const MapComponent = () => {
     setSelectedImage(null);
   };
 
+  const toggleGraphModal = () => {
+    setShowGraphModal(!showGraphModal);
+  };
+
   return (
     <>
       <MapContainer
@@ -85,6 +92,7 @@ const MapComponent = () => {
                   nodeDetails={nodeDetails[node.id]}
                   onBinClick={handleBinClick}
                   onClose={handleClosePopup}
+                  toggleGraphModal={toggleGraphModal} // Pass down toggle function
                 />
                 {selectedImage && (
                   <div>
@@ -96,6 +104,15 @@ const MapComponent = () => {
           </Marker>
         ))}
       </MapContainer>
+
+      {/* LineGraph modal */}
+      {showGraphModal && (
+        <GraphModal onClose={toggleGraphModal}>
+          <div style={{ width: '100%', height: '100%' }}>
+            <LineGraph nodeId={nodeDetails[selectedNodeId]?.node_id} />
+          </div>
+        </GraphModal>
+      )}
     </>
   );
 };
