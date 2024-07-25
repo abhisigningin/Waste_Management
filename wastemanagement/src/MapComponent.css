@@ -1,0 +1,20 @@
+/* MapComponent.css */
+body {
+  overflow: hidden;
+  background-color: #181b1f;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-container {
+  background-color: #222; /* Dark background for the map */
+}
+
+img.leaflet-tile {
+  filter: brightness(100%) invert(100%); /* Invert tile colors for dark mode */
+}
+
+.custom-boundary {
+  color: pink; /* Pink color for boundaries */
+}

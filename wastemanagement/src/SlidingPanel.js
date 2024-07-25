@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './SlidingPanel.css';
+import LineGraph from './LineGraph'; // Import LineGraph component
 
-const SlidingPanel = ({ nodeDetails, onClose, toggleGraphModal }) => {
+const SlidingPanel = ({ nodeDetails, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [initialX, setInitialX] = useState(0);
+  const [initialY, setInitialY] = useState(0);
+
+  const imageRef = useRef(null);
 
   const images = nodeDetails ? [
     `${nodeDetails.node_id}_bin1_image.png`,
     `${nodeDetails.node_id}_bin2_image.png`
   ] : [];
 
-  const binNames = ["bin1", "bin2"];
+  const binNames = ["Bin 1", "Bin 2"];
 
   const handlePrevImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
@@ -22,38 +29,45 @@ const SlidingPanel = ({ nodeDetails, onClose, toggleGraphModal }) => {
   const parseViolations = (violationsObj) => {
     return Object.keys(violationsObj).map(key => (
       <div key={key}>
-        <strong>{key}: </strong> {violationsObj[key][0]}
+        Version {key}- 
+        <span>{violationsObj[key][0]}</span> {/* Wrap value in a span */}
       </div>
     ));
   };
 
-  useEffect(() => {
-    // Trigger animation or other effects on component mount if needed
-  }, []);
-
+  const handleMouseDown = (e) => {
+    if (imageRef.current) {
+      setStartX(e.clientX);
+      setStartY(e.clientY);
+      setInitialX(imageRef.current.offsetLeft);
+      setInitialY(imageRef.current.offsetTop);
+    }
+  };
   return (
     <div className={`sliding-panel ${nodeDetails ? 'show' : ''}`}>
-      <button className="close-btn" onClick={onClose}>Close</button>
+      <button className="close-btn" onClick={onClose}>&#10005;</button>
       <div className="panel-content">
         {/* Left side - Image */}
         <div className="popup-image">
           <img
+            ref={imageRef}
             src={`/images/${images[currentImageIndex]}`}
             alt={`Bin ${currentImageIndex + 1}`}
-            style={{ width: '100%', height: '100%', maxWidth: '300px', maxHeight: '100px' }}
+            onMouseDown={handleMouseDown}
           />
           <div className="overlay-text">
             {binNames[currentImageIndex]}
           </div>
-          <div className="image-nav" style={{ position: 'absolute', top: '25%', transform: 'translateY(-50%)', left: 0, right: 0, textAlign: 'center' }}>
-            <button className="nav-btn prev" onClick={handlePrevImage} style={{ position: 'absolute', left: '20px', background: '#31363f', border: 'none', fontSize: '15px', color: '#fff' }}>
+          <div className="image-nav">
+            <button className="nav-btn prev" onClick={handlePrevImage}>
               &#8249; {/* Previous image arrow */}
             </button>
-            <button className="nav-btn next" onClick={handleNextImage} style={{ position: 'absolute', right: '25px', background: '#31363f', border: 'none', fontSize: '15px', color: '#fff' }}>
+            <button className="nav-btn next" onClick={handleNextImage}>
               &#8250; {/* Next image arrow */}
             </button>
           </div>
         </div>
+
 
         {/* Right side - Data */}
         <div className="popup-data">
@@ -74,10 +88,10 @@ const SlidingPanel = ({ nodeDetails, onClose, toggleGraphModal }) => {
           </div>
         </div>
 
-        {/* Button to toggle LineGraph modal */}
-        <button onClick={toggleGraphModal}>
-          Show Line Graph
-        </button>
+        {/* Always render LineGraph */}
+        <div className="line-graph-container">
+          <LineGraph nodeId={nodeDetails.node_id} />
+        </div>
       </div>
     </div>
   );
