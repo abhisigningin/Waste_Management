@@ -16,62 +16,79 @@ const MapComponent = () => {
   const [binLocations, setBinLocations] = useState([]);
   const [binImages, setBinImages] = useState([]);
 
-  const mapRef = useRef();
+  const mapRef = useRef(null);
   const markerRefs = useRef([]);
-  const initialMarkersAdded = useRef(false); // Track if initial markers have been added
+  const initialMarkersAdded = useRef(false);
 
-  const customIcon = new L.Icon({
-    iconUrl: '/images/custom-icon.png',
-    iconSize: [52, 52],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
+  const customIcon = (nodeId) => new L.divIcon({
+  className: 'custom-bin-icon',
+  html: `<div style="text-align: center;">
+           <img src="/images/custom-icon.png" alt="Bin" style="width: 60px; height: 60px;"/>
+           <div style="font-size: 9px; font-weight: bold; color: Black;">${nodeId}</div>
+         </div>`,
+  iconSize: [80, 80],
+});
+
 
   const createIcon = (url, status, label) => new L.divIcon({
     className: 'custom-bin-icon',
     html: `<div style="text-align: center;">
              <img src="${url}" alt="Bin" style="width: 60px; height: 60px;"/>
              <div style="font-size: 16px; font-weight: bold; color: Black;">${label}</div>
-             <div style="font-size: 14px; font-weight: bold; color: ${status === 'Full' ? 'red' : 'green'};">${status}</div>
+             <div style="font-size: 14px; font-weight: bold; color: ${status === 'Full' ? 'red' : status === 'None' ? 'gray' : 'green'};">${status}</div>
            </div>`,
     iconSize: [80, 80],
   });
 
   useEffect(() => {
-    fetch('/nodes.json')
-      .then(response => response.json())
-      .then(data => setNodes(data))
-      .catch(error => console.error('Error fetching nodes data:', error));
+    const fetchNodes = () => {
+      fetch('/nodes.json')
+        .then(response => response.json())
+        .then(data => setNodes(data))
+        .catch(error => console.error('Error fetching nodes data:', error));
+    };
+
+    fetchNodes();
+    const interval = setInterval(fetchNodes, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/nodes')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        const details = {};
-        data.forEach(node => {
-          details[node.node_id] = node;
-        });
-        setNodeDetails(details);
-      })
-      .catch(error => console.error('Error fetching node details:', error));
+    const fetchNodeDetails = () => {
+      fetch('http://localhost:5000/api/nodes')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const details = {};
+          data.forEach(node => {
+            details[node.node_id] = node;
+          });
+          setNodeDetails(details);
+        })
+        .catch(error => console.error('Error fetching node details:', error));
+    };
+
+    fetchNodeDetails();
+    const interval = setInterval(fetchNodeDetails, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   useEffect(() => {
     if (mapRef.current && !initialMarkersAdded.current) {
       const map = mapRef.current;
       markerRefs.current = nodes.map(node => {
-        const marker = L.marker(node.coordinates, { icon: customIcon })
+        const marker = L.marker(node.coordinates, { icon: customIcon(node.id) })
           .addTo(map)
           .on('click', () => handleMarkerClick(node.id, node.coordinates));
         return marker;
       });
-      initialMarkersAdded.current = true; // Mark that initial markers have been added
+      initialMarkersAdded.current = true;
     }
   }, [nodes]);
 
@@ -86,25 +103,21 @@ const MapComponent = () => {
 
     if (nodeDetails[nodeId]) {
       const binDataStr = nodeDetails[nodeId].bin_data;
-
-      console.log('Raw Bin Data String:', binDataStr);
-
       const binData = binDataStr.split(', ').reduce((acc, item) => {
         const [key, value] = item.split(':');
         acc[key] = value;
         return acc;
       }, {});
 
-      console.log('Parsed Bin Data:', binData);
-
       const images = [
         binData.bin1.toLowerCase() === 'full' ? '/images/full.png' :
-        binData.bin1.toLowerCase() === 'half' ? '/images/half.png' : '',
+        binData.bin1.toLowerCase() === 'none' ? '/images/non.png' :
+        binData.bin1.toLowerCase() === 'half' ? '/images/half.png' : '/images/default.png',
         binData.bin2.toLowerCase() === 'full' ? '/images/full.png' :
-        binData.bin2.toLowerCase() === 'half' ? '/images/half.png' : '',
+        binData.bin2.toLowerCase() === 'none' ? '/images/non.png' :
+        binData.bin2.toLowerCase() === 'half' ? '/images/half.png' : '/images/default.png',
       ];
 
-      console.log('Bin Images:', images);
       setBinImages(images);
       setBinLocations(fixedPositions);
 
@@ -127,12 +140,12 @@ const MapComponent = () => {
         // Add bin markers with dynamic images and text
         fixedPositions.forEach((position, index) => {
           const binLabel = `Bin ${index + 1}`;
-          const binText = binData[`bin${index + 1}`].toLowerCase() === 'full' ? 'Full' : 'Half';
+          const binText = binData[`bin${index + 1}`];
           const binMarker = L.marker(position, { icon: createIcon(images[index], binText, binLabel) }).addTo(map);
+
           markerRefs.current.push(binMarker);
         });
 
-        // Add boundary to markerRefs to be removed later
         markerRefs.current.push(boundary);
       }
     }
@@ -146,19 +159,16 @@ const MapComponent = () => {
     if (mapRef.current) {
       const map = mapRef.current;
 
-      // Remove temporary layers (dashed circle and bin markers)
       markerRefs.current.forEach(marker => map.removeLayer(marker));
       markerRefs.current = [];
 
-      // Re-add initial markers
       markerRefs.current = nodes.map(node => {
-        const marker = L.marker(node.coordinates, { icon: customIcon })
+        const marker = L.marker(node.coordinates, { icon: customIcon(node.id) })
           .addTo(map)
           .on('click', () => handleMarkerClick(node.id, node.coordinates));
         return marker;
       });
 
-      // Reset map zoom level to 16
       map.setZoom(16);
     }
   };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './CustomPopup.css';
 
+
+
 const CustomPopup = ({ nodeDetails, onBinClick, onClose, toggleGraphModal }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 

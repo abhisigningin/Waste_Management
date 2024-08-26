@@ -43,6 +43,11 @@ const SlidingPanel = ({ nodeDetails, onClose }) => {
       setInitialY(imageRef.current.offsetTop);
     }
   };
+
+  const handleImageError = (e) => {
+    e.target.src = '/images/non.png'; // Fallback to non.png if the image is not found
+  };
+
   return (
     <div className={`sliding-panel ${nodeDetails ? 'show' : ''}`}>
       <button className="close-btn" onClick={onClose}>&#10005;</button>
@@ -53,6 +58,7 @@ const SlidingPanel = ({ nodeDetails, onClose }) => {
             ref={imageRef}
             src={`/images/${images[currentImageIndex]}`}
             alt={`Bin ${currentImageIndex + 1}`}
+            onError={handleImageError}  // Handle image not found error
             onMouseDown={handleMouseDown}
           />
           <div className="overlay-text">
@@ -67,7 +73,6 @@ const SlidingPanel = ({ nodeDetails, onClose }) => {
             </button>
           </div>
         </div>
-
 
         {/* Right side - Data */}
         <div className="popup-data">

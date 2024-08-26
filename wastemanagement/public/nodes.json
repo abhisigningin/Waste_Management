@@ -1,11 +1,11 @@
 [
     {
-      "id": "WM12-0032-0001",
+      "id": "WM01-0032-0001",
       "coordinates": [17.4449, 78.3498],
       "description": "Water Meter W1"
     },
     {
-      "id": "WM12-0032-0002",
+      "id": "WM01-0032-0002",
       "coordinates": [17.4455, 78.3489],
       "description": "Water Meter W2"
     }
