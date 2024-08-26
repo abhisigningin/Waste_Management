@@ -2,7 +2,7 @@
     "db":{
         "DB_HOST" : "localhost",
         "DB_PORT" : "5432",
-        "DB_NAME" : "data",
+        "DB_NAME" : "waste_data",
         "DB_USER" : "postgres",
         "DB_PASS" : "1234"
 
@@ -16,14 +16,5 @@
         "CS": "TEXT",       
         "Violations": "TEXT",
         "url":["https://ctop.iiit.ac.in/api/nodes/get-node/WM01-0032-0001/latest","https://ctop.iiit.ac.in/api/nodes/get-node/WM01-0032-0002/latest"]
-    },
-    "waste": {
-        "Timestamp":"timestamp with time zone",
-        "node_id":"TEXT",
-        "BinData": "TEXT",
-        "LCT": "timestamp with time zone",
-        "CS": "TEXT",        
-        "Violations": "TEXT",
-        "url":["https://smartcitylivinglab.iiit.ac.in/ctop-api/nodes/get-node/WM12-0032-0002/latest"]
     }
 }

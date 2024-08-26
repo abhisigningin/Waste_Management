@@ -1,5 +1,6 @@
 import json
 import psycopg2
+from psycopg2 import sql
 
 # Load parameters from JSON file
 with open('nodes.json', 'r') as node_file:
@@ -8,14 +9,49 @@ with open('nodes.json', 'r') as node_file:
 
 # Database connection parameters
 db_params = {
-    'dbname': db_details['DB_NAME'],
+    'dbname': 'postgres',  # Connect to the default database to create a new one
     'user': db_details['DB_USER'],
     'password': db_details['DB_PASS'],
     'host': db_details['DB_HOST'],
     'port': db_details['DB_PORT']
 }
 
-# Connect to the PostgreSQL database
+# Function to check if a database exists
+def database_exists(dbname):
+    conn = psycopg2.connect(**db_params)
+    conn.autocommit = True  # Need autocommit to create databases
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT EXISTS (
+            SELECT FROM pg_database
+            WHERE datname = %s
+        );
+    """, (dbname,))
+    exists = cur.fetchone()[0]
+    cur.close()
+    conn.close()
+    return exists
+
+# Function to create a database
+def create_database(dbname):
+    if database_exists(dbname):
+        print(f"Database {dbname} already exists. Skipping creation.")
+    else:
+        conn = psycopg2.connect(**db_params)
+        conn.autocommit = True  # Need autocommit to create databases
+        cur = conn.cursor()
+        cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(dbname)))
+        cur.close()
+        conn.close()
+        print(f"Database {dbname} created successfully.")
+
+# Create the database if it doesn't exist
+create_database(db_details['DB_NAME'])
+
+# Update db_params to connect to the new database
+db_params['dbname'] = db_details['DB_NAME']
+
+# Connect to the new database
 conn = psycopg2.connect(**db_params)
 cur = conn.cursor()
 
