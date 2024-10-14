@@ -8,13 +8,11 @@
 
     },
 
-    "wastemanagement": {
-        "Timestamp":"timestamp with time zone",
-        "node_id":"TEXT",
-        "BinData": "TEXT",
-        "LCT": "timestamp with time zone",
-        "CS": "TEXT",       
-        "Violations": "TEXT",
-        "url":["https://ctop.iiit.ac.in/api/nodes/get-node/WM01-0032-0001/latest","https://ctop.iiit.ac.in/api/nodes/get-node/WM01-0032-0002/latest"]
+    "waste_management_data": {
+        "bindata": "TEXT",
+        "lct": "TEXT",
+        "vehicle_number":"TEXT",
+        "polluters_count":"INT",
+        "url":["https://ctop.iiit.ac.in/api/nodes/get-node/WM31-0032-0001/latest","https://ctop.iiit.ac.in/api/nodes/get-node/WM31-0032-0002/latest"]
     }
 }
