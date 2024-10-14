@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
@@ -17,7 +18,7 @@ const StyledMenu = styled(Menu)(({ theme }) => ({
   '& .MuiPaper-root': {
     borderRadius: 6,
     marginTop: theme.spacing(1),
-    minWidth: 180,
+    minWidth: 150,
     color: theme.palette.text.primary,
     boxShadow: theme.shadows[5],
     '& .MuiMenuItem-root': {
@@ -37,8 +38,8 @@ const StyledMenu = styled(Menu)(({ theme }) => ({
 }));
 
 const iconStyles = {
-  status: {
-    backgroundColor: 'blue', // Blue background for status
+  metric: {
+    backgroundColor: 'blue', // Blue background for metric
     color: 'white', // White icon color
     width: 50, // Fixed width
     height: 50, // Fixed height
@@ -58,57 +59,105 @@ const iconStyles = {
     },
   },
   download: {
-    backgroundColor: '#9F2B68', // Red background for download
+    backgroundColor: '#9F2B68', // Purple background for download
     color: 'white', // White icon color
     width: 50, // Fixed width
     height: 50, // Fixed height
     borderRadius: '50%', // Circular icons
     '&:hover': {
-      backgroundColor: 'purple', // Darker red on hover
+      backgroundColor: 'purple', // Darker purple on hover
     },
   },
 };
 
-const LineGraph = ({ nodeId }) => {
-  const [period, setPeriod] = useState('weekly');
-  const [status, setStatus] = useState('cleaned');
+const LineGraph = () => {
+  const [period, setPeriod] = useState('daily'); // Default to 'daily'
+  const [metric, setMetric] = useState('polluters_count'); // Default metric
   const [data, setData] = useState({ labels: [], datasets: [] });
-  const [anchorElStatus, setAnchorElStatus] = useState(null);
+  const [anchorElMetric, setAnchorElMetric] = useState(null);
   const [anchorElPeriod, setAnchorElPeriod] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState(null); // Error state
 
+  
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(`http://localhost:5000/api/cs-data?period=${period}&cs=${status}`);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const result = await response.json();
-
-        // Assuming result is an array of objects with period and count
-        const labels = result.map(item => item.period);
-        const values = result.map(item => item.count);
-
-        setData({
-          labels,
-          datasets: [
-            {
-              label: `${status} (${period})`,
-              data: values,
-              fill: false,
-              backgroundColor: 'rgba(75,192,192,0.2)',
-              borderColor: 'rgba(75,192,192,1)',
-            },
-          ],
-        });
+          const response = await fetch(`http://localhost:5000/api/metrics-data?period=${period}&metric=${metric}`);
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          const result = await response.json();
+  
+          // Process data based on selected period
+          let labels;
+          if (period === 'daily') {
+              labels = result.map(item => {
+                  const date = new Date(item.period);
+                  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); // Format as HH:MM
+              });
+          } else if (period === 'weekly') {
+              labels = result.map(item => {
+                  const date = new Date(item.period);
+                  return date.toLocaleDateString(); // Show date (e.g., "MM/DD")
+              });
+          } else if (period === 'monthly') {
+              labels = result.map(item => {
+                  const date = new Date(item.period);
+                  return `Week ${getWeekNumber(date)}`; // Display the week number
+              });
+          } else if (period === 'yearly') {
+              labels = result.map(item => {
+                  const date = new Date(item.period);
+                  return date.toLocaleString('default', { month: 'long' }); // Show month name
+              });
+          } 
+  
+          // Prepare data values as before
+          const values = result.map(item => {
+              if (metric === 'lct') {
+                  return parseInt(item.lct_count, 10);
+              }
+              return parseInt(item.value, 10);
+          });
+  
+          setData({
+              labels,
+              datasets: [
+                  {
+                      label: `${metric.replace('_', ' ').toUpperCase()} (${period})`,
+                      data: values,
+                      fill: false,
+                      backgroundColor: 'rgba(75,192,192,0.2)',
+                      borderColor: 'rgba(75,192,192,1)',
+                  },
+              ],
+          });
       } catch (error) {
-        console.error('Error fetching data:', error);
+          console.error('Error fetching data:', error);
+          setError('Failed to fetch data. Please try again.');
+      } finally {
+          setLoading(false);
       }
-    };
-
+  };
+  
+  
     fetchData();
-  }, [period, status]);
+  }, [period, metric]);
+  
+
+  // Utility function to get week number
+  const getWeekNumber = (date) => {
+    const tempDate = new Date(date.getTime());
+    tempDate.setHours(0, 0, 0, 0);
+    tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
+    const yearStart = new Date(tempDate.getFullYear(), 0, 1);
+    const weekNo = Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
+    return weekNo;
+  };
 
   const handleDownload = () => {
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
@@ -123,18 +172,24 @@ const LineGraph = ({ nodeId }) => {
   return (
     <div>
       {/* Main Graph Section */}
-      <div className="graph-modal" style={{ position: 'relative', height: '40vh' }}>
+      <div className="graph-modal" style={{ position: 'relative', height: '28vh' }}>
         <div className="graph" style={{ height: '100%' }}>
-          <Line 
-            data={data} 
-            options={{ 
-              maintainAspectRatio: false,
-              onClick: () => setModalOpen(true), // Open modal on graph click
-            }} 
-          />
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p style={{ color: 'red' }}>{error}</p>
+          ) : (
+            <Line 
+              data={data} 
+              options={{ 
+                maintainAspectRatio: false,
+                onClick: () => setModalOpen(true), // Open modal on graph click
+              }} 
+            />
+          )}
         </div>
         <div className="controls" style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <IconButton onClick={(e) => setAnchorElStatus(e.currentTarget)} sx={iconStyles.status}>
+          <IconButton onClick={(e) => setAnchorElMetric(e.currentTarget)} sx={iconStyles.metric}>
             <BorderColorIcon />
           </IconButton>
           <IconButton onClick={(e) => setAnchorElPeriod(e.currentTarget)} sx={iconStyles.period}>
@@ -144,15 +199,15 @@ const LineGraph = ({ nodeId }) => {
             <ArchiveIcon />
           </IconButton>
         </div>
-
-        {/* Status Menu */}
+        
+        {/* Metric Menu */}
         <StyledMenu
-          anchorEl={anchorElStatus}
-          open={Boolean(anchorElStatus)}
-          onClose={() => setAnchorElStatus(null)}
+          anchorEl={anchorElMetric}
+          open={Boolean(anchorElMetric)}
+          onClose={() => setAnchorElMetric(null)}
         >
-          <MenuItem onClick={() => { setStatus('Cleaned'); setAnchorElStatus(null); }}>Cleaned</MenuItem>
-          <MenuItem onClick={() => { setStatus('Uncleaned'); setAnchorElStatus(null); }}>Uncleaned</MenuItem>
+          <MenuItem onClick={() => { setMetric('polluters_count'); setAnchorElMetric(null); }}>Polluters Count</MenuItem>
+          <MenuItem onClick={() => { setMetric('lct'); setAnchorElMetric(null); }}>LCT</MenuItem>
         </StyledMenu>
 
         {/* Period Menu */}
@@ -161,9 +216,11 @@ const LineGraph = ({ nodeId }) => {
           open={Boolean(anchorElPeriod)}
           onClose={() => setAnchorElPeriod(null)}
         >
+          <MenuItem onClick={() => { setPeriod('daily'); setAnchorElPeriod(null); }}>Daily</MenuItem>
           <MenuItem onClick={() => { setPeriod('weekly'); setAnchorElPeriod(null); }}>Weekly</MenuItem>
           <MenuItem onClick={() => { setPeriod('monthly'); setAnchorElPeriod(null); }}>Monthly</MenuItem>
           <MenuItem onClick={() => { setPeriod('yearly'); setAnchorElPeriod(null); }}>Yearly</MenuItem>
+
         </StyledMenu>
       </div>
 
@@ -176,22 +233,28 @@ const LineGraph = ({ nodeId }) => {
       >
         <DialogContent style={{ padding: '16px', display: 'flex', flexDirection: 'column', height: '60vh' }}>
           <div style={{ flex: 1 }}>
-            <Line 
-              data={data} 
-              options={{ 
-                maintainAspectRatio: false,
-                scales: {
-                  x: {
-                    ticks: {
-                      autoSkip: false, // Ensure all x-axis labels are visible
+            {loading ? (
+              <p>Loading...</p>
+            ) : error ? (
+              <p style={{ color: 'red' }}>{error}</p>
+            ) : (
+              <Line 
+                data={data} 
+                options={{ 
+                  maintainAspectRatio: false,
+                  scales: {
+                    x: {
+                      ticks: {
+                        autoSkip: false, // Ensure all x-axis labels are visible
+                      },
                     },
                   },
-                },
-              }} 
-            />
+                }} 
+              />
+            )}
           </div>
           <DialogActions style={{ justifyContent: 'flex-end' }}>
-            <IconButton onClick={(e) => setAnchorElStatus(e.currentTarget)} sx={iconStyles.status}>
+            <IconButton onClick={(e) => setAnchorElMetric(e.currentTarget)} sx={iconStyles.metric}>
               <BorderColorIcon />
             </IconButton>
             <IconButton onClick={(e) => setAnchorElPeriod(e.currentTarget)} sx={iconStyles.period}>

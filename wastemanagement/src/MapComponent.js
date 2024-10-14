@@ -21,32 +21,42 @@ const MapComponent = () => {
   const initialMarkersAdded = useRef(false);
 
   const customIcon = (nodeId) => new L.divIcon({
-  className: 'custom-bin-icon',
-  html: `<div style="text-align: center;">
-           <img src="/images/custom-icon.png" alt="Bin" style="width: 60px; height: 60px;"/>
-           <div style="font-size: 9px; font-weight: bold; color: Black;">${nodeId}</div>
-         </div>`,
-  iconSize: [80, 80],
-});
-
+    className: 'custom-bin-icon',
+    html: `<div style="text-align: center;">
+             <img src="/images/custom-icon.png" alt="Bin" style="width: 60px; height: 60px;"/>
+             <div style="font-size: 9px; font-weight: bold; color: Black;">${nodeId}</div>
+           </div>`,
+    iconSize: [80, 80],
+  });
 
   const createIcon = (url, status, label) => new L.divIcon({
     className: 'custom-bin-icon',
     html: `<div style="text-align: center;">
              <img src="${url}" alt="Bin" style="width: 60px; height: 60px;"/>
              <div style="font-size: 16px; font-weight: bold; color: Black;">${label}</div>
-             <div style="font-size: 14px; font-weight: bold; color: ${status === 'Full' ? 'red' : status === 'None' ? 'gray' : 'green'};">${status}</div>
+             <div style="font-size: 14px; font-weight: bold; color: ${status.toLowerCase() === 'full' ? 'red' : status.toLowerCase() === 'none' ? 'gray' : 'green'};">${status}</div>
            </div>`,
     iconSize: [80, 80],
   });
 
   useEffect(() => {
-    const fetchNodes = () => {
-      fetch('/nodes.json')
-        .then(response => response.json())
-        .then(data => setNodes(data))
-        .catch(error => console.error('Error fetching nodes data:', error));
+    const fetchNodes = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/nodes');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        const formattedNodes = data.map(node => ({
+          id: node.node_id,
+          type: node.type,
+          coordinates: [node.lat, node.long],
+          location:node.location
+        }));
+        setNodes(formattedNodes);
+      } catch (error) {
+        console.error('Error fetching nodes data:', error);
+      }
     };
+    
 
     fetchNodes();
     const interval = setInterval(fetchNodes, 30000); // Refresh every 30 seconds
@@ -56,7 +66,7 @@ const MapComponent = () => {
 
   useEffect(() => {
     const fetchNodeDetails = () => {
-      fetch('http://localhost:5000/api/nodes')
+      fetch('http://localhost:5000/api/data')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -96,58 +106,80 @@ const MapComponent = () => {
     setSelectedNodeId(nodeId);
     setShowPanel(true);
 
+    // Define fixed positions for bins relative to the main marker
     const fixedPositions = [
-      [coordinates[0] + 0.0003, coordinates[1] + 0.0003],
-      [coordinates[0] - 0.0003, coordinates[1] - 0.0003],
+      [coordinates[0] + 0.0003, coordinates[1] + 0.0003], // Position for Bin1
+      [coordinates[0] - 0.0003, coordinates[1] - 0.0003], // Position for Bin2
+      // Add more positions here if you have more bins
     ];
 
     if (nodeDetails[nodeId]) {
-      const binDataStr = nodeDetails[nodeId].bin_data;
-      const binData = binDataStr.split(', ').reduce((acc, item) => {
-        const [key, value] = item.split(':');
-        acc[key] = value;
-        return acc;
-      }, {});
+      const nodeDetail = nodeDetails[nodeId];
+      console.log('Node Details:', nodeDetail);
 
-      const images = [
-        binData.bin1.toLowerCase() === 'full' ? '/images/full.png' :
-        binData.bin1.toLowerCase() === 'none' ? '/images/non.png' :
-        binData.bin1.toLowerCase() === 'half' ? '/images/half.png' : '/images/default.png',
-        binData.bin2.toLowerCase() === 'full' ? '/images/full.png' :
-        binData.bin2.toLowerCase() === 'none' ? '/images/non.png' :
-        binData.bin2.toLowerCase() === 'half' ? '/images/half.png' : '/images/default.png',
-      ];
+      if (nodeDetail.bindata) {
+        const binDataStr = nodeDetail.bindata;
 
-      setBinImages(images);
-      setBinLocations(fixedPositions);
-
-      if (mapRef.current) {
-        const map = mapRef.current;
-
-        // Clear existing markers before adding new ones
-        markerRefs.current.forEach(marker => map.removeLayer(marker));
-        markerRefs.current = [];
-
-        map.flyTo(coordinates, 18);
-
-        // Draw dashed boundary
-        const boundary = L.circle(coordinates, {
-          color: 'blue',
-          dashArray: '10, 10',
-          radius: 100,
-        }).addTo(map);
-
-        // Add bin markers with dynamic images and text
-        fixedPositions.forEach((position, index) => {
-          const binLabel = `Bin ${index + 1}`;
-          const binText = binData[`bin${index + 1}`];
-          const binMarker = L.marker(position, { icon: createIcon(images[index], binText, binLabel) }).addTo(map);
-
-          markerRefs.current.push(binMarker);
+        // Split the bindata string by '],[' to separate Bin1 and Bin2
+        const binDataArray = binDataStr.split('],[').map(item => {
+          // Remove any leading or trailing brackets or spaces
+          const cleanItem = item.replace(/^\[|\]$/g, '').trim();
+          const [key, value, ...rest] = cleanItem.split('-');
+          // If there are additional '-' in the base64 data, join them back
+          const binData = rest.join('-');
+          return { key, value, binData };
         });
 
-        markerRefs.current.push(boundary);
+        // Set images based on bin data
+        const images = binDataArray.map(bin => {
+          switch (bin.value.toLowerCase()) {
+            case 'full':
+              return '/images/full.png';
+            case 'half':
+              return '/images/half.png';
+            case 'none':
+              return '/images/non.png';
+            default:
+              return '/images/default.png';
+          }
+        });
+
+        setBinImages(images);
+        setBinLocations(fixedPositions.slice(0, binDataArray.length)); // Ensure we have enough positions
+
+        if (mapRef.current) {
+          const map = mapRef.current;
+
+          // Clear existing markers before adding new ones
+          markerRefs.current.forEach(marker => map.removeLayer(marker));
+          markerRefs.current = [];
+
+          map.flyTo(coordinates, 18);
+
+          // Draw dashed boundary around the main marker
+          const boundary = L.circle(coordinates, {
+            color: 'blue',
+            dashArray: '10, 10',
+            radius: 100,
+          }).addTo(map);
+
+          markerRefs.current.push(boundary);
+
+          // Add bin markers with dynamic images and text
+          binDataArray.forEach((bin, index) => {
+            const position = fixedPositions[index] || coordinates; // Fallback to main coordinates if no position defined
+            const binLabel = bin.key; // e.g., Bin1 or Bin2
+            const binStatus = bin.value; // e.g., Full, Half, None
+            const binMarker = L.marker(position, { icon: createIcon(images[index], binStatus, binLabel) }).addTo(map);
+
+            markerRefs.current.push(binMarker);
+          });
+        }
+      } else {
+        console.error(`bindata is not available for nodeId: ${nodeId}`);
       }
+    } else {
+      console.error(`Node details not found for nodeId: ${nodeId}`);
     }
   };
 

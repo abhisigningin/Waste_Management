@@ -3,29 +3,26 @@
     position: fixed;
     top: 0;
     right: 0;
-    width: 500px; /* Adjust width as needed */
+    width: 80%; /* Use a percentage for responsiveness */
+    max-width: 500px; /* Set a max width */
     height: 100%;
     background: #f9f9f9;
-    overflow: hidden; /* Hide scrollbars for a cleaner look */
-    z-index: 1000; /* Ensure it's above the map but doesn't cover critical markers */
-    transition: transform 0.3s ease-in-out; /* Smooth sliding animation */
-    transform: translateX(100%); /* Start hidden off-screen */
+    overflow: hidden;
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(100%);
 }
 
-
-
 .sliding-panel.show {
-    transform: translateX(0); /* Slide in */
+    transform: translateX(0);
 }
 
 .panel-content {
     display: flex;
-    flex-direction: column; /* Stack content vertically */
+    flex-direction: column; 
     height: 100%;
-    position: relative; /* Relative positioning for absolute child elements */
 }
 
-/* No gap between image and data */
 .popup-image {
     position: relative;
     height: 36vh; /* Adjust to fit the desired height */
@@ -35,34 +32,69 @@
 
 .popup-image img {
     position: absolute; /* Position absolutely within the container */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: auto; /* Maintain aspect ratio */
-    /* max-height: 100%;  */
-    object-fit: cover; /* Cover the container */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    width: auto; /* Set width to auto */
+    height: 100%; /* Full height of the container */
+    transform: translate(-50%, -50%); /* Center the image */
+    object-fit: contain; /* Ensure the entire image is visible without cropping */
 }
+ul {
+    display: flex;            /* Use flexbox for horizontal alignment */
+    padding: 0;              /* Remove default padding */
+    list-style-type: none;   /* Remove bullet points */
+  }
+  
+  li {
+    display: flex;           /* Use flex for each item to align circle and text */
+    flex-direction: column;  /* Stack circle and text vertically */
+    align-items: center;     /* Center items horizontally */
+    margin-right: 80px;      /* Increase space between each item (change this value) */
+  }
+  
+  /* Add this CSS to your stylesheet */
 
+.node-detail {
+    margin-bottom: 10px; /* Space between details */
+    display: block; /* Ensure it behaves as a block element */
+  }
+  
+  .circle {
+    width: 40px; /* Adjust size as needed */
+    height: 40px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-bottom: 5px; /* Space between circle and text */
+    border: 1px solid black; /* Add black border */
+  }
+  
+  .full {
+    background-color: red;
+  }
+  
+  .half {
+    background: linear-gradient(to top, blue 50%, white 50%);
+  }
+  
 
 .overlay-text {
     position: absolute;
-    top: 15%; /* Position below the image */
+    top: 10%; /* Position at the bottom */
     left: 0;
     right: 0;
-    background: rgb(251, 251, 251);
+    background: rgba(251, 251, 251, 0.8); /* Semi-transparent background */
     color: black;
     padding: 5px;
-    text-align: center; /* Center text */
-    height: 10%; /* Allocate space for the text */
+    text-align: center;
 }
 
 .image-nav {
     position: absolute;
-    bottom: 10%; /* Positioned at the top of the image */
+    bottom: 5%; /* Adjust to position arrows */
     left: 0;
     right: 0;
     display: flex;
-    justify-content: space-between; /* Position arrows at the edges */
+    justify-content: space-between; 
     padding: 0 10px;
 }
 
@@ -79,109 +111,73 @@
     background: #4a4a4a;
 }
 
-/* SlidingPanel.css */
 .close-btn {
     position: absolute;
     top: 10px;
-    right: 10px; /* Position at the top-right of the panel */
+    right: 10px; 
     background: #c91f33;
     color: white;
     border: none;
     padding: 10px;
     cursor: pointer;
-    font-size: 18px; /* Adjust size for better visibility */
-    width: 40px; /* Fixed width for the button */
-    height: 40px; /* Fixed height for the button */
+    font-size: 18px; 
+    width: 40px; 
+    height: 40px; 
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%; /* Make it a circle */
+    border-radius: 50%; 
 }
 
 .close-btn:hover {
     background: #e70707;
 }
 
-
 .separator-line {
     border: none;
-    border-top: 5px solid #afb0b4; /* Light gray line */
-    margin: 0; /* Remove margin to eliminate gap */
+    border-top: 5px solid #afb0b4; 
+    margin: 0; 
 }
 
-
-/* Increase the height of the graph container */
 .line-graph-container {
-    height: 40vh; /* Adjust height as needed */
+    height: 28vh; 
     width: 100%;
-    overflow: hidden; /* Hide overflow if necessary */
-    
+    overflow: hidden; 
+    margin: 0;
 }
 
-/* Ensure popup-data section uses less space */
 .popup-data {
-    padding: 20px;
-    height: auto; /* Allow content to adjust based on content size */
-    max-height: 40vh; /* Limit the height to fit within the panel */
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    background: #f9f9f9; /* Light background for contrast */
-    margin: 0; /* Remove margin to eliminate gap */
-    font-size: 15px;
+    padding: 10px;
+    max-height: 35vh; 
+    overflow-y: auto; 
+    background: #f9f9f9; 
+    margin: 0; 
+
+    flex: 1; 
     
+    flex: 1; /* Allow data section to grow */
 }
 
-/* Optional: Ensure the image section also uses space efficiently */
-.popup-image {
-    height: 40vh; /* Adjust as needed */
-}
-
-
-/* SlidingPanel.css */
 .popup-data div {
-    display: flex; /* Use flex to align items */
-    align-items: flex-start; /* Align items at the start */
+    display: flex; 
+    align-items: flex-start; 
 }
 
 .popup-data strong {
-    flex-shrink: 0; /* Prevent the label from shrinking */
-    margin-right: 5px; /* Space between label and value */
+    flex-shrink: 0; 
+    margin-right: 5px; 
 }
-
-.popup-data span {
-    display: inline; /* Ensure value appears on the same line as the label */
-    white-space: nowrap; /* Prevent text from wrapping */
-}
-
-
-.popup-data strong {
-    display: inline; /* Ensure label and data appear on the same line */
-}
-
-.popup-data span {
-    display: inline; /* Ensure value appears on the same line as the label */
-}
-
-
-
 
 .line-graph {
-    width: 100% !important; /* Full width */
-    height: 100% !important; /* Full height */
-    margin: 0; /* Remove margin */
+    width: 100% !important; 
+    height: 100% !important; 
+    margin: 0; 
 }
 
-/* Ensure the panel content adjusts well with the graph */
 .panel-content {
     display: flex;
-    flex-direction: column; /* Stack content vertically */
-    height: 100%; /* Full height */
-    overflow: hidden; /* Prevent scrollbars */
+    flex-direction: column; 
+    height: 100%; 
+    overflow: hidden; 
 }
 
-/* Ensure the popup-data section is scrollable */
-.popup-data {
-    padding: 20px;
-    overflow-y: auto; /* Allow scrolling if content overflows */
-    background: #f9f9f9; /* Light background for contrast */
-    flex: 1; /* Allow popup-data to take available space */
-}

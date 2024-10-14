@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = 5000;
@@ -11,22 +13,41 @@ app.use(cors());
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'data',
+  database: 'waste_data',
   password: '1234',
   port: 5432,
 });
 
-// API endpoint to fetch node data
+// Utility function to save base64 images
+const saveBase64Image = (base64Str, filename) => {
+  const base64Data = base64Str.replace(/^data:image\/\w+;base64,/, ""); // Remove metadata
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  const imagePath = path.join(__dirname, 'public/images/waste_images', filename);
+  
+  fs.writeFile(imagePath, buffer, (err) => {
+    if (err) {
+      console.error('Error saving image:', err);
+    } else {
+      console.log(`Image saved successfully: ${filename}`);
+    }
+  });
+};
+
+// API endpoint to fetch nodes
 app.get('/api/nodes', async (req, res) => {
   try {
     console.log('Executing query to fetch node data');
+
     const query = `
-      SELECT DISTINCT ON (node_id) node_id, "Timestamp" as timestamp, bin_data, LCT, CS, Violations
-      FROM wastemanagement
-      ORDER BY node_id, timestamp DESC
+      SELECT node_id, type, lat, long, location
+      FROM nodes
+      WHERE type = 'WM'
     `;
+    
     const result = await pool.query(query);
     console.log('Query executed successfully', result.rows);
+    
     res.json(result.rows);
   } catch (err) {
     console.error('Error executing node data query', err.stack);
@@ -34,48 +55,224 @@ app.get('/api/nodes', async (req, res) => {
   }
 });
 
-// API endpoint to fetch CS and timestamp data
-// API endpoint to fetch CS and timestamp data
-app.get('/api/cs-data', async (req, res) => {
-  const { period, cs } = req.query;
-
-  console.log('Received request with period:', period, 'and CS:', cs);
-
-  let interval = '';
-  if (period === 'weekly') {
-    interval = 'week'; // Use 'week' directly for PostgreSQL
-  } else if (period === 'monthly') {
-    interval = 'month';
-  } else if (period === 'yearly') {
-    interval = 'year';
-  } else {
-    console.log('Invalid period:', period);
-    return res.status(400).json({ error: 'Invalid period' });
-  }
-
+// API endpoint to fetch node data
+app.get('/api/data', async (req, res) => {
   try {
-    console.log('Interval period used in query:', interval); // Log the interval period
-
+    console.log('Executing query to fetch node data');
+    
     const query = `
-      SELECT
-        date_trunc('${interval}', "Timestamp") AS period,
-        COUNT(*) AS count
-      FROM wastemanagement
-      WHERE CS = $1
-      GROUP BY period
-      ORDER BY period
+      SELECT DISTINCT ON (node_id) node_id, "timestamp" as timestamp, bindata, lct, vehicle_number, polluters_count
+      FROM waste_management_data
+      ORDER BY node_id, timestamp DESC
     `;
-    console.log('Executing query:', query, 'with parameter:', cs);
-    const result = await pool.query(query, [cs]);
-    console.log('Query result:', result.rows);
+    
+    const result = await pool.query(query);
+    console.log('Query executed successfully', result.rows);
+    
+    // Process bindata to save images
+    result.rows.forEach(row => {
+      if (row.bindata) {
+        const bins = row.bindata.split(','); // Split bindata by comma
+        bins.forEach((binData) => {
+          let [binId, status, base64Image] = binData.split('-');
+          
+          // Clean up binId
+          binId = binId.replace(/[\[\]]/g, '');
+
+          // Skip saving the image if it's 'NA'
+          if (base64Image && base64Image !== 'NA') {
+            const filename = `${row.node_id.replace(/:/g, '-')}_${binId}_${status}_image.jpg`;
+            saveBase64Image(base64Image, filename);
+          }
+        });
+      }
+    });
+
     res.json(result.rows);
   } catch (err) {
-    console.error('Error executing cs-data query', err.stack);
+    console.error('Error executing node data query', err.stack);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Start server
+// API endpoint to fetch metrics data
+app.get('/api/metrics-data', async (req, res) => {
+  const { period, metric } = req.query;
+
+  console.log('Received request with period:', period, 'and metric:', metric);
+
+  // Validate metric
+  const validMetrics = ['polluters_count', 'lct'];
+  if (!validMetrics.includes(metric)) {
+    return res.status(400).json({ error: 'Invalid metric' });
+  }
+
+  // Determine the interval based on the period
+  let query = '';
+  let params = [];
+
+  try {
+    if (period === 'daily') {
+      if (metric === 'polluters_count') {
+        query = `
+           WITH date_series AS (
+            SELECT generate_series(
+              CURRENT_DATE,                     -- Start date
+              NOW(),                            -- End date
+              '1 hour'::interval               -- Interval of one hour
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(SUM(wmd.polluters_count), 0) AS value
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON date_trunc('hour', wmd."timestamp") = ds.period
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      } else if (metric === 'lct') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              CURRENT_DATE,                     -- Start date
+              NOW(),                            -- End date
+              '1 hour'::interval               -- Interval of one hour
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(COUNT(wmd.lct), 0) AS lct_count
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON date_trunc('hour', to_timestamp(wmd.lct::bigint)) = ds.period
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      }
+    } else if (period === 'weekly') {
+      if (metric === 'polluters_count') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              CURRENT_DATE - INTERVAL '6 days',  -- Start date (last week)
+              CURRENT_DATE,                       -- End date
+              '1 day'::interval                  -- Interval of one day
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(SUM(wmd.polluters_count), 0) AS value
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON date_trunc('day', wmd."timestamp") = ds.period
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      } else if (metric === 'lct') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              CURRENT_DATE - INTERVAL '6 days',  -- Start date (last week)
+              CURRENT_DATE,                       -- End date
+              '1 day'::interval                  -- Interval of one day
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(COUNT(wmd.lct), 0) AS lct_count
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON DATE(to_timestamp(wmd.lct::bigint)) = ds.period
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      }
+    } else if (period === 'monthly') {
+      if (metric === 'polluters_count') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              DATE_TRUNC('month', CURRENT_DATE),  -- Start date (1st of the month)
+              DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day', -- End date (last day of the month)
+              '1 week'::interval                  -- Interval of one week
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(SUM(wmd.polluters_count), 0) AS value
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON DATE(wmd."timestamp") >= ds.period
+          AND DATE(wmd."timestamp") < ds.period + INTERVAL '1 week'
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      } else if (metric === 'lct') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              DATE_TRUNC('month', CURRENT_DATE),  -- Start date (1st of the month)
+              DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day', -- End date (last day of the month)
+              '1 week'::interval                  -- Interval of one week
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(COUNT(wmd.lct), 0) AS lct_count
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON DATE(to_timestamp(wmd.lct::bigint)) >= ds.period
+          AND DATE(to_timestamp(wmd.lct::bigint)) < ds.period + INTERVAL '1 week'
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      }
+    } else if (period === 'yearly') {
+      if (metric === 'polluters_count') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              DATE_TRUNC('year', CURRENT_DATE),  -- Start date (1st of January)
+              DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year' - INTERVAL '1 day', -- End date (last day of the year)
+              '1 month'::interval                  -- Interval of one month
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(SUM(wmd.polluters_count), 0) AS value
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON DATE(wmd."timestamp") >= ds.period
+          AND DATE(wmd."timestamp") < ds.period + INTERVAL '1 month'
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      } else if (metric === 'lct') {
+        query = `
+          WITH date_series AS (
+            SELECT generate_series(
+              DATE_TRUNC('year', CURRENT_DATE),  -- Start date (1st of January)
+              DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year' - INTERVAL '1 day', -- End date (last day of the year)
+              '1 month'::interval                  -- Interval of one month
+            ) AS period
+          )
+          SELECT ds.period, 
+                 COALESCE(COUNT(wmd.lct), 0) AS lct_count
+          FROM date_series ds
+          LEFT JOIN waste_management_data wmd 
+          ON DATE(to_timestamp(wmd.lct::bigint)) >= ds.period
+          AND DATE(to_timestamp(wmd.lct::bigint)) < ds.period + INTERVAL '1 month'
+          GROUP BY ds.period
+          ORDER BY ds.period;
+        `;
+      }
+    }
+
+    console.log('Executing query:', query, 'with params:', params);
+    const result = await pool.query(query, params);
+    console.log('Query result:', result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error executing metrics-data query', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

@@ -61,16 +61,16 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose, toggleGraphModal }) => 
           <strong>Node ID:</strong> {nodeDetails.node_id}
         </div>
         <div>
-          <strong>Bin Data:</strong> {nodeDetails.bin_data}
+          <strong>Bin Data:</strong> {nodeDetails.bindata}
         </div>
         <div>
           <strong>LCT:</strong> {nodeDetails.lct}
         </div>
         <div>
-          <strong>CS:</strong> {nodeDetails.cs}
+          <strong>Pickup Vehicle:</strong> {nodeDetails.vehicle_number}
         </div>
         <div>
-          <strong>Violations:</strong> {nodeDetails.violations && parseViolations(JSON.parse(nodeDetails.violations))}
+          <strong>Polluters Count:</strong> {nodeDetails.polluters_count}
         </div>
       </div>
 
