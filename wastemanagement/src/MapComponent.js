@@ -6,7 +6,7 @@ import CustomPopup from './CustomPopup';
 import GraphModal from './GraphModal';
 import LineGraph from './LineGraph';
 import SlidingPanel from './SlidingPanel';
-
+import Navbar from './Navbar';
 const MapComponent = () => {
   const [nodes, setNodes] = useState([]);
   const [nodeDetails, setNodeDetails] = useState({});
@@ -211,6 +211,7 @@ const MapComponent = () => {
 
   return (
     <>
+    <Navbar isPanelOpen={showPanel} /> {/* Add Navbar here */}
       <MapContainer
         center={[17.4455, 78.3489]}
         zoom={16}
