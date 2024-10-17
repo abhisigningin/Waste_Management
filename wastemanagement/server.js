@@ -97,9 +97,9 @@ app.get('/api/data', async (req, res) => {
 
 // API endpoint to fetch metrics data
 app.get('/api/metrics-data', async (req, res) => {
-  const { period, metric } = req.query;
+  const { period, metric, node_id } = req.query; // Ensure nodeID is extracted
 
-  console.log('Received request with period:', period, 'and metric:', metric);
+  console.log('Received request with period:', period, 'and metric:', metric, 'node_id:', node_id);
 
   // Validate metric
   const validMetrics = ['polluters_count', 'lct'];
@@ -110,8 +110,11 @@ app.get('/api/metrics-data', async (req, res) => {
   // Determine the interval based on the period
   let query = '';
   let params = [];
-
   try {
+
+    if (node_id) {
+      params.push(node_id);
+    }
     if (period === 'daily') {
       if (metric === 'polluters_count') {
         query = `
@@ -127,6 +130,7 @@ app.get('/api/metrics-data', async (req, res) => {
           FROM date_series ds
           LEFT JOIN waste_management_data wmd 
           ON date_trunc('hour', wmd."timestamp") = ds.period
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -144,6 +148,7 @@ app.get('/api/metrics-data', async (req, res) => {
           FROM date_series ds
           LEFT JOIN waste_management_data wmd 
           ON date_trunc('hour', to_timestamp(wmd.lct::bigint)) = ds.period
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -163,6 +168,7 @@ app.get('/api/metrics-data', async (req, res) => {
           FROM date_series ds
           LEFT JOIN waste_management_data wmd 
           ON date_trunc('day', wmd."timestamp") = ds.period
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -180,6 +186,7 @@ app.get('/api/metrics-data', async (req, res) => {
           FROM date_series ds
           LEFT JOIN waste_management_data wmd 
           ON DATE(to_timestamp(wmd.lct::bigint)) = ds.period
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -200,6 +207,7 @@ app.get('/api/metrics-data', async (req, res) => {
           LEFT JOIN waste_management_data wmd 
           ON DATE(wmd."timestamp") >= ds.period
           AND DATE(wmd."timestamp") < ds.period + INTERVAL '1 week'
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -218,6 +226,7 @@ app.get('/api/metrics-data', async (req, res) => {
           LEFT JOIN waste_management_data wmd 
           ON DATE(to_timestamp(wmd.lct::bigint)) >= ds.period
           AND DATE(to_timestamp(wmd.lct::bigint)) < ds.period + INTERVAL '1 week'
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -238,6 +247,7 @@ app.get('/api/metrics-data', async (req, res) => {
           LEFT JOIN waste_management_data wmd 
           ON DATE(wmd."timestamp") >= ds.period
           AND DATE(wmd."timestamp") < ds.period + INTERVAL '1 month'
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;
@@ -256,6 +266,7 @@ app.get('/api/metrics-data', async (req, res) => {
           LEFT JOIN waste_management_data wmd 
           ON DATE(to_timestamp(wmd.lct::bigint)) >= ds.period
           AND DATE(to_timestamp(wmd.lct::bigint)) < ds.period + INTERVAL '1 month'
+          AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
           ORDER BY ds.period;
         `;

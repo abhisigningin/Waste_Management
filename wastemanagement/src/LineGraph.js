@@ -70,7 +70,7 @@ const iconStyles = {
   },
 };
 
-const LineGraph = () => {
+const LineGraph = ({ nodeId }) => {
   const [period, setPeriod] = useState('daily'); // Default to 'daily'
   const [metric, setMetric] = useState('polluters_count'); // Default metric
   const [data, setData] = useState({ labels: [], datasets: [] });
@@ -86,7 +86,7 @@ const LineGraph = () => {
       setLoading(true);
       setError(null);
       try {
-          const response = await fetch(`http://localhost:5000/api/metrics-data?period=${period}&metric=${metric}`);
+          const response = await fetch(`http://localhost:5000/api/metrics-data?period=${period}&metric=${metric}&node_id=${nodeId}`);
           if (!response.ok) {
               throw new Error('Network response was not ok');
           }
@@ -143,10 +143,10 @@ const LineGraph = () => {
           setLoading(false);
       }
   };
-  
+  console.log(period, metric,nodeId)
   
     fetchData();
-  }, [period, metric]);
+  }, [period, metric,nodeId]);
   
 
   // Utility function to get week number

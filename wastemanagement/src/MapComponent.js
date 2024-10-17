@@ -232,12 +232,13 @@ const MapComponent = () => {
         />
       )}
 
-      {showGraphModal && (
-        <GraphModal onClose={toggleGraphModal}>
-          <div style={{ width: '100%', height: '100%' }}>
-            <LineGraph nodeId={nodeDetails[selectedNodeId]?.node_id} />
-          </div>
-        </GraphModal>
+{showGraphModal && (
+    <GraphModal onClose={toggleGraphModal}>
+        <div style={{ width: '100%', height: '100%' }}>
+            <LineGraph nodeId={nodeDetails[selectedNodeId]?.node_id} /> {/* Pass nodeId as a prop */}
+        </div>
+    </GraphModal>
+
       )}
     </>
   );
