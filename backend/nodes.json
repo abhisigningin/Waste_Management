@@ -13,6 +13,6 @@
         "lct": "TEXT",
         "vehicle_number":"TEXT",
         "polluters_count":"INT",
-        "url":["https://ctop.iiit.ac.in/api/nodes/get-node/WM31-0032-0001/latest","https://ctop.iiit.ac.in/api/nodes/get-node/WM31-0032-0002/latest"]
+        "url":["https://ctop.iiit.ac.in/api/nodes/get-node/WM31-0032-0001/latest"]
     }
 }
