@@ -7,6 +7,7 @@ import GraphModal from './GraphModal';
 import LineGraph from './LineGraph';
 import SlidingPanel from './SlidingPanel';
 import Navbar from './Navbar';
+
 const MapComponent = () => {
   const [nodes, setNodes] = useState([]);
   const [nodeDetails, setNodeDetails] = useState({});
@@ -19,6 +20,8 @@ const MapComponent = () => {
   const mapRef = useRef(null);
   const markerRefs = useRef([]);
   const initialMarkersAdded = useRef(false);
+
+  const backend = 'localhost'
 
   const customIcon = (nodeId) => new L.divIcon({
     className: 'custom-bin-icon',
@@ -39,56 +42,41 @@ const MapComponent = () => {
     iconSize: [80, 80],
   });
 
+  // Combine fetching logic to be triggered once
   useEffect(() => {
-    const fetchNodes = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/nodes');
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        const formattedNodes = data.map(node => ({
+        // Fetch nodes data
+        const nodesResponse = await fetch('http://localhost:5000/api/nodes');
+        if (!nodesResponse.ok) throw new Error('Network response was not ok for nodes');
+        const nodesData = await nodesResponse.json();
+        const formattedNodes = nodesData.map(node => ({
           id: node.node_id,
           type: node.type,
           coordinates: [node.lat, node.long],
-          location:node.location
+          location: node.location
         }));
         setNodes(formattedNodes);
+
+        // Fetch node details data
+        const detailsResponse = await fetch('http://localhost:5000/api/data');
+        if (!detailsResponse.ok) throw new Error('Network response was not ok for node details');
+        const detailsData = await detailsResponse.json();
+        const details = {};
+        detailsData.forEach(node => {
+          details[node.node_id] = node;
+        });
+        setNodeDetails(details);
       } catch (error) {
-        console.error('Error fetching nodes data:', error);
+        console.error('Error fetching data:', error);
       }
     };
-    
 
-    fetchNodes();
-    const interval = setInterval(fetchNodes, 30000); // Refresh every 30 seconds
+    // Call the fetchData function once on component mount
+    fetchData();
+  }, []); // This ensures fetchData is only called once when the component is mounted
 
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []);
-
-  useEffect(() => {
-    const fetchNodeDetails = () => {
-      fetch('http://localhost:5000/api/data')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          const details = {};
-          data.forEach(node => {
-            details[node.node_id] = node;
-          });
-          setNodeDetails(details);
-        })
-        .catch(error => console.error('Error fetching node details:', error));
-    };
-
-    fetchNodeDetails();
-    const interval = setInterval(fetchNodeDetails, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []);
-
+  // This useEffect handles adding markers only once to the map
   useEffect(() => {
     if (mapRef.current && !initialMarkersAdded.current) {
       const map = mapRef.current;
@@ -100,88 +88,45 @@ const MapComponent = () => {
       });
       initialMarkersAdded.current = true;
     }
-  }, [nodes]);
+  }, [nodes]); // Ensure markers are only added when nodes are available
 
   const handleMarkerClick = (nodeId, coordinates) => {
     setSelectedNodeId(nodeId);
     setShowPanel(true);
-
-    // Define fixed positions for bins relative to the main marker
+  
     const fixedPositions = [
-      [coordinates[0] + 0.0003, coordinates[1] + 0.0003], // Position for Bin1
-      [coordinates[0] - 0.0003, coordinates[1] - 0.0003], // Position for Bin2
-      // Add more positions here if you have more bins
+      [coordinates[0] + 0.0003, coordinates[1] + 0.0003],
+      [coordinates[0] - 0.0003, coordinates[1] - 0.0003],
     ];
-
+  
     if (nodeDetails[nodeId]) {
       const nodeDetail = nodeDetails[nodeId];
-      console.log('Node Details:', nodeDetail);
-
+  
       if (nodeDetail.bindata) {
         const binDataStr = nodeDetail.bindata;
-
-        // Split the bindata string by '],[' to separate Bin1 and Bin2
-        const binDataArray = binDataStr.split('],[').map(item => {
-          // Remove any leading or trailing brackets or spaces
-          const cleanItem = item.replace(/^\[|\]$/g, '').trim();
-          const [key, value, ...rest] = cleanItem.split('-');
-          // If there are additional '-' in the base64 data, join them back
-          const binData = rest.join('-');
-          return { key, value, binData };
+  
+        // Assuming bindata is a comma-separated string, split it into an array
+        const binDataArray = binDataStr.split(',').map(bin => {
+          const [value, label] = bin.split(':'); // Assuming format "value:label"
+          return { value: value.trim(), label: label.trim() };
         });
-
-        // Set images based on bin data
-        const images = binDataArray.map(bin => {
+  
+        // Set bin images based on binDataArray values
+        setBinImages(binDataArray.map(bin => {
           switch (bin.value.toLowerCase()) {
-            case 'full':
-              return '/images/full.png';
-            case 'half':
-              return '/images/half.png';
-            case 'none':
-              return '/images/non.png';
-            default:
-              return '/images/default.png';
+            case 'full': return '/images/full.png';
+            case 'half': return '/images/half.png';
+            case 'none': return '/images/non.png';
+            default: return '/images/default.png';
           }
-        });
-
-        setBinImages(images);
+        }));
+  
         setBinLocations(fixedPositions.slice(0, binDataArray.length)); // Ensure we have enough positions
-
-        if (mapRef.current) {
-          const map = mapRef.current;
-
-          // Clear existing markers before adding new ones
-          markerRefs.current.forEach(marker => map.removeLayer(marker));
-          markerRefs.current = [];
-
-          map.flyTo(coordinates, 18);
-
-          // Draw dashed boundary around the main marker
-          const boundary = L.circle(coordinates, {
-            color: 'blue',
-            dashArray: '10, 10',
-            radius: 100,
-          }).addTo(map);
-
-          markerRefs.current.push(boundary);
-
-          // Add bin markers with dynamic images and text
-          binDataArray.forEach((bin, index) => {
-            const position = fixedPositions[index] || coordinates; // Fallback to main coordinates if no position defined
-            const binLabel = bin.key; // e.g., Bin1 or Bin2
-            const binStatus = bin.value; // e.g., Full, Half, None
-            const binMarker = L.marker(position, { icon: createIcon(images[index], binStatus, binLabel) }).addTo(map);
-
-            markerRefs.current.push(binMarker);
-          });
-        }
-      } else {
-        console.error(`bindata is not available for nodeId: ${nodeId}`);
       }
-    } else {
-      console.error(`Node details not found for nodeId: ${nodeId}`);
     }
   };
+  
+  
 
   const handleClosePopup = () => {
     setSelectedNodeId(null);
@@ -190,7 +135,6 @@ const MapComponent = () => {
 
     if (mapRef.current) {
       const map = mapRef.current;
-
       markerRefs.current.forEach(marker => map.removeLayer(marker));
       markerRefs.current = [];
 
@@ -203,10 +147,6 @@ const MapComponent = () => {
 
       map.setZoom(16);
     }
-  };
-
-  const toggleGraphModal = () => {
-    setShowGraphModal(!showGraphModal);
   };
 
   return (
@@ -228,17 +168,13 @@ const MapComponent = () => {
         <SlidingPanel
           nodeDetails={nodeDetails[selectedNodeId]}
           onClose={handleClosePopup}
-          toggleGraphModal={toggleGraphModal}
         />
       )}
 
-{showGraphModal && (
-    <GraphModal onClose={toggleGraphModal}>
-        <div style={{ width: '100%', height: '100%' }}>
-            <LineGraph nodeId={nodeDetails[selectedNodeId]?.node_id} /> {/* Pass nodeId as a prop */}
-        </div>
-    </GraphModal>
-
+      {showGraphModal && (
+        <GraphModal onClose={() => setShowGraphModal(false)}>
+          <LineGraph data={nodeDetails[selectedNodeId]} />
+        </GraphModal>
       )}
     </>
   );

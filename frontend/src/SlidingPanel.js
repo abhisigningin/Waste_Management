@@ -110,7 +110,7 @@ const SlidingPanel = ({ nodeDetails, onClose }) => {
 
         {/* Right side - Data */}
         <div className="popup-data">
-          <div style={{  fontSize: '24px' }}>{nodeDetails.node_id}</div>
+          <div style={{  fontSize: '22px' }}>{nodeDetails.node_id}</div>
           <div>
             {filteredNodes.length > 0 ? (
               filteredNodes.map((node, index) => (
@@ -139,22 +139,22 @@ const SlidingPanel = ({ nodeDetails, onClose }) => {
           <div className="node-detail">
         <FontAwesomeIcon 
           icon={faClock} 
-          style={{ marginLeft: '5px', marginRight: '10px', fontSize: '24px' }} // Set desired size here
+          style={{ marginLeft: '5px', marginRight: '10px', fontSize: '20px' }} // Set desired size here
         />
         <strong>LCT:</strong>
         {formatTimestamp(nodeDetails.lct)}
       </div>
-      <div className="node-detail">
+      {/* <div className="node-detail">
         <FontAwesomeIcon 
           icon={faTruck} 
           style={{ marginLeft: '5px', marginRight: '10px', fontSize: '24px' }} // Set desired size here
         />
         <strong>Pickup Vehicle:</strong>
         {nodeDetails.vehicle_number}
-      </div>
+      </div> */}
       <div className="node-detail">
         <Groups2Icon 
-          style={{ marginLeft: '5px', marginRight: '10px', fontSize: '24px' }} // Set desired size here
+          style={{ marginLeft: '5px', marginRight: '10px', fontSize: '20px' }} // Set desired size here
         />
         <strong>Polluters Count:</strong>
         {nodeDetails.polluters_count}

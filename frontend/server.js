@@ -13,8 +13,8 @@ app.use(cors());
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'ctop',
-  password: 'P0stgr3SQL_Acc3ss2024!',
+  database: 'waste_data',
+  password: '1234',
   port: 5432,
 });
 
@@ -62,8 +62,8 @@ app.get('/api/data', async (req, res) => {
     
     const query = `
       SELECT DISTINCT ON (node_id) node_id, "timestamp" as timestamp, bindata, lct, vehicle_number, polluters_count
-      FROM waste_management_data
-      ORDER BY node_id, timestamp DESC
+      FROM waste_management
+      ORDER BY node_id, timestamp DESC limit 1
     `;
     
     const result = await pool.query(query);
@@ -128,7 +128,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(SUM(wmd.polluters_count), 0) AS value
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON date_trunc('hour', wmd."timestamp") = ds.period
           AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
@@ -146,7 +146,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(COUNT(wmd.lct), 0) AS lct_count
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON date_trunc('hour', to_timestamp(wmd.lct::bigint)) = ds.period
           AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
@@ -166,7 +166,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(SUM(wmd.polluters_count), 0) AS value
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON date_trunc('day', wmd."timestamp") = ds.period
           AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
@@ -184,7 +184,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(COUNT(wmd.lct), 0) AS lct_count
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON DATE(to_timestamp(wmd.lct::bigint)) = ds.period
           AND wmd.node_id = $1  -- Placeholder for node_id
           GROUP BY ds.period
@@ -204,7 +204,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(SUM(wmd.polluters_count), 0) AS value
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON DATE(wmd."timestamp") >= ds.period
           AND DATE(wmd."timestamp") < ds.period + INTERVAL '1 week'
           AND wmd.node_id = $1  -- Placeholder for node_id
@@ -223,7 +223,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(COUNT(wmd.lct), 0) AS lct_count
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON DATE(to_timestamp(wmd.lct::bigint)) >= ds.period
           AND DATE(to_timestamp(wmd.lct::bigint)) < ds.period + INTERVAL '1 week'
           AND wmd.node_id = $1  -- Placeholder for node_id
@@ -244,7 +244,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(SUM(wmd.polluters_count), 0) AS value
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON DATE(wmd."timestamp") >= ds.period
           AND DATE(wmd."timestamp") < ds.period + INTERVAL '1 month'
           AND wmd.node_id = $1  -- Placeholder for node_id
@@ -263,7 +263,7 @@ app.get('/api/metrics-data', async (req, res) => {
           SELECT ds.period, 
                  COALESCE(COUNT(wmd.lct), 0) AS lct_count
           FROM date_series ds
-          LEFT JOIN waste_management_data wmd 
+          LEFT JOIN waste_management wmd 
           ON DATE(to_timestamp(wmd.lct::bigint)) >= ds.period
           AND DATE(to_timestamp(wmd.lct::bigint)) < ds.period + INTERVAL '1 month'
           AND wmd.node_id = $1  -- Placeholder for node_id

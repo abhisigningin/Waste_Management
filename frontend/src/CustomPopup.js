@@ -66,9 +66,9 @@ const CustomPopup = ({ nodeDetails, onBinClick, onClose, toggleGraphModal }) => 
         <div>
           <strong>LCT:</strong> {nodeDetails.lct}
         </div>
-        <div>
+        {/* <div>
           <strong>Pickup Vehicle:</strong> {nodeDetails.vehicle_number}
-        </div>
+        </div> */}
         <div>
           <strong>Polluters Count:</strong> {nodeDetails.polluters_count}
         </div>

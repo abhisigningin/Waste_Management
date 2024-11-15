@@ -2,13 +2,13 @@
     "db":{
         "DB_HOST" : "localhost",
         "DB_PORT" : "5432",
-        "DB_NAME" : "ctop",
+        "DB_NAME" : "waste_data",
         "DB_USER" : "postgres",
-        "DB_PASS" : "P0stgr3SQL_Acc3ss2024!"
+        "DB_PASS" : "1234"
 
     },
 
-    "waste_management_data": {
+    "waste_management": {
         "bindata": "TEXT",
         "lct": "TEXT",
         "vehicle_number":"TEXT",
