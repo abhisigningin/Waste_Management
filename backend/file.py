@@ -151,7 +151,7 @@ async def main():
 
         # Wait for 10 seconds before processing again
         print("Waiting for 10 seconds before next execution...")
-        await asyncio.sleep(3600)
+        await asyncio.sleep(10)
 
 if __name__ == "__main__":
     asyncio.run(main())

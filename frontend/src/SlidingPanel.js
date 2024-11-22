@@ -14,7 +14,7 @@ const SlidingPanel = ({ nodeDetails, onClose }) => {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/nodes');
+        const response = await fetch('http://10.3.0.214:5000/api/nodes');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         const formattedNodes = data.map(node => ({

@@ -86,7 +86,7 @@ const LineGraph = ({ nodeId }) => {
       setLoading(true);
       setError(null);
       try {
-          const response = await fetch(`http://localhost:5000/api/metrics-data?period=${period}&metric=${metric}&node_id=${nodeId}`);
+          const response = await fetch(`http://10.3.0.214:5000/api/metrics-data?period=${period}&metric=${metric}&node_id=${nodeId}`);
           if (!response.ok) {
               throw new Error('Network response was not ok');
           }
