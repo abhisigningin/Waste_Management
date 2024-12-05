@@ -1,0 +1,13 @@
+
+.container {
+  display: flex;
+  height: calc(100vh - 60px); /* Subtracting navbar height */
+}
+
+
+
+/* Map container to be in the center */
+.map-container {
+  flex: 2; /* Adjust width for the map in the center */
+}
+

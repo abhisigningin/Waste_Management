@@ -1,0 +1,17 @@
+{
+"type": "FeatureCollection",
+"name": "nodes",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "Location": "OBH", "AQI": 95.0 }, "geometry": { "type": "Point", "coordinates": [ 78.345969162898271, 17.444987775774546 ] } },
+{ "type": "Feature", "properties": { "id": 2, "Location": "Guest house", "AQI": 112.0 }, "geometry": { "type": "Point", "coordinates": [ 78.347432370878195, 17.445678303458262 ] } },
+{ "type": "Feature", "properties": { "id": 3, "Location": "NBH", "AQI": 99.0 }, "geometry": { "type": "Point", "coordinates": [ 78.347183314200763, 17.446628702875064 ] } },
+{ "type": "Feature", "properties": { "id": 4, "Location": "FSQ", "AQI": 74.0 }, "geometry": { "type": "Point", "coordinates": [ 78.348604324594461, 17.443790965351475 ] } },
+{ "type": "Feature", "properties": { "id": 5, "Location": "pump house", "AQI": 65.0 }, "geometry": { "type": "Point", "coordinates": [ 78.349522244052409, 17.443111311889339 ] } },
+{ "type": "Feature", "properties": { "id": 6, "Location": "t-hub", "AQI": 119.0 }, "geometry": { "type": "Point", "coordinates": [ 78.348775578224689, 17.445738419896248 ] } },
+{ "type": "Feature", "properties": { "id": 7, "Location": "Foot ball", "AQI": 143.0 }, "geometry": { "type": "Point", "coordinates": [ 78.348556373578006, 17.446888584621991 ] } },
+{ "type": "Feature", "properties": { "id": 8, "Location": "main gate", "AQI": 127.0 }, "geometry": { "type": "Point", "coordinates": [ 78.351412884129985, 17.445921401133425 ] } },
+{ "type": "Feature", "properties": { "id": 9, "Location": "vindya", "AQI": 18.0 }, "geometry": { "type": "Point", "coordinates": [ 78.349796249860773, 17.445764560084228 ] } },
+{ "type": "Feature", "properties": { "id": 10, "Location": "bakul", "AQI": 136.0 }, "geometry": { "type": "Point", "coordinates": [ 78.34900163301657, 17.447777343303812 ] } }
+]
+}

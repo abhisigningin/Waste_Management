@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "location": "Main Gate",
+    "coordinates": [
+      17.445888725925958,
+      78.35133068238748
+    ],
+    "aqi": 127
+  },
+  {
+    "id": 2,
+    "location": "OBH",
+    "coordinates": [
+      17.44545087758107,
+      78.34628212536876
+    ],
+    "aqi": 95
+  },
+  {
+    "id": 3,
+    "location": "Nilgiri",
+    "coordinates": [
+      17.447418,
+      78.348986
+    ],
+    "aqi": 136
+  },
+  {
+    "id": 4,
+    "location": "Vindya",
+    "coordinates": [
+      17.445351,
+      78.348644
+    ],
+    "aqi": 98
+  },
+  {
+    "id": 5,
+    "location": "Vindhya A4",
+    "coordinates": [
+      17.44554886380476,
+      78.349582159474
+    ],
+    "aqi": 95
+  },
+  {
+    "id": 6,
+    "location": "football",
+    "coordinates": [
+      17.446501,
+      78.34823
+    ],
+    "aqi": 143
+  },
+  {
+    "id": 7,
+    "location": "football node2",
+    "coordinates": [
+      17.446335,
+      78.34897
+    ],
+    "aqi": 135
+  },
+  {
+    "id": 8,
+    "location": "t-hub node2",
+    "coordinates": [
+      17.445842,
+      78.348556
+    ],
+    "aqi": 119
+  }
+]

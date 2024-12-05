@@ -11,9 +11,7 @@ body {
   background-color: #222; /* Dark background for the map */
 }
 
-img.leaflet-tile {
-  filter: brightness(100%) invert(100%); /* Invert tile colors for dark mode */
-}
+
 
 .custom-boundary {
   color: pink; /* Pink color for boundaries */

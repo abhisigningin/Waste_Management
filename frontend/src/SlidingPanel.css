@@ -1,7 +1,7 @@
 /* SlidingPanel.css */
 .sliding-panel {
     position: fixed;
-    top: 0;
+    top: 7%;
     right: 0;
     width: 80%; /* Use a percentage for responsiveness */
     max-width: 500px; /* Set a max width */
@@ -10,6 +10,11 @@
     z-index: 1000;
     transition: transform 0.3s ease-in-out;
     transform: translateX(100%);
+}
+.panel-location {
+    display: flex;
+    flex-wrap: wrap; /* Allows wrapping if needed */
+    gap: 5px; /* Space between locations */
 }
 
 .sliding-panel.show {
@@ -28,6 +33,9 @@
     height: 36vh; /* Adjust to fit the desired height */
     width: 100%; /* Full width of the panel */
     overflow: hidden; /* Hide overflow */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .popup-image img {
@@ -54,8 +62,10 @@ li {
 }
 
 .node-detail {
-    margin-bottom: 10px; /* Space between details */
-    display: block; /* Ensure it behaves as a block element */
+    margin-bottom: 10px; 
+    display: block; 
+    text-align: left;
+    justify-content: left;
 }
 
 .circle {
@@ -104,7 +114,9 @@ li {
     justify-content: space-between; 
     padding: 0 10px;
 }
-
+.analytics-btn-container {
+  margin-top: 10px; /* Adjust margin to place the button below the image */
+}
 .nav-btn {
     background: #31363f;
     color: white;
@@ -159,9 +171,33 @@ li {
     margin: 0; 
 }
 
+.line-graph-btn {
+    position: relative; /* Remove absolute positioning */
+    display: block; /* Makes the button take up full width */
+    width: 100%; /* Makes the button span the full width of the container */
+    max-width: 600px; /* Optional: restricts the maximum width */
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center; /* Centers the text */
+    margin: 10px auto; /* Centers the button horizontally */
+  }
+  
+  
+  .line-graph-btn:hover {
+    background-color: #0056b3;
+  }
+
 .panel-content {
     display: flex;
     flex-direction: column; 
     height: 100%; 
     overflow: hidden; 
+}
+
+.panel-location{
+    text-align: left;
 }
