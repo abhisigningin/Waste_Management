@@ -28,7 +28,7 @@ This Python script monitors and analyzes the fill levels of two waste bins using
 ### 1. Clone the Repository
 Clone this repository to your local machine:
 ```bash
-git clone https://github.com/your_username/Waste_Management.git
+git clone https://github.com/abhisigningin/Waste_Management.git
 ```
 
 ### 2. Install Dependencies
