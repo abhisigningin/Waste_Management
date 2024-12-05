@@ -34,7 +34,7 @@ git clone https://github.com/abhisigningin/Waste_Management.git
 ### 2. Install Dependencies
 Navigate to the project directory and install the required dependencies:
 ```bash
-cd Waste_Management
+cd ComputerVision
 pip install opencv-python numpy requests
 ```
 
