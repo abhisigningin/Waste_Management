@@ -8,7 +8,7 @@ This Python script monitors and analyzes the fill levels of two waste bins using
 ## Features
 
 - **Real-time Monitoring:** Continuously processes RTSP video streams to determine bin fill levels.
-- **Status Updates:** Categorizes bins as `Full`, `Half-Full`, or `Empty` based on predefined thresholds.
+- **Status Updates:** Categorizes bins as `Full`, `Half`, or `Empty` based on predefined thresholds.
 - **Polluter Tracking:** Tracks cleaning events and polluter counts for enhanced monitoring.
 - **CTOP API Integration:** Sends bin data (status, images, and timestamps) to a CTOP API for centralized management.
 
