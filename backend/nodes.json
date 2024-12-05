@@ -2,9 +2,9 @@
     "db":{
         "DB_HOST" : "localhost",
         "DB_PORT" : "5432",
-        "DB_NAME" : "ctop",
-        "DB_USER" : "postgres",
-        "DB_PASS" : "P0stgr3SQL_Acc3ss2024!"
+        "DB_NAME" : "dbname",
+        "DB_USER" : "username",
+        "DB_PASS" : "password"
 
     },
 
@@ -13,6 +13,6 @@
         "lct": "TEXT",
         "vehicle_number":"TEXT",
         "polluters_count":"INT",
-        "url":["https://ctop.iiit.ac.in/api/nodes/get-node/WM31-0032-0001/latest"]
+        "url":["data_url"]
     }
 }
